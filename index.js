@@ -1,4 +1,6 @@
 const express = require('express')
+const multer = require('multer')
+const path = require('path')
 const app = express()
 const port = 3000
 
@@ -17,6 +19,28 @@ app.get('/', (req, res) => {
 const server = app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+      cb(null, '/upload/');
+  },
+
+  // By default, multer removes file extensions so let's add them back
+  filename: function(req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+app.post('/upload-multiple-images', (req, res) => {
+  // 10 is the limit I've defined for number of uploaded files at once
+  // 'multiple_images' is the name of our file input field
+  let upload = multer({ storage: storage }).array('multiple_images', 10);
+
+  upload(req, res, function(err) {
+      let result = `You have uploaded ${req.files.length} files`;
+      res.send(result);
+  });
+});
 
 
 process.on('SIGTERM', shutDown);
